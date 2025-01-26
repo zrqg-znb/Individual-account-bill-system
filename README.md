@@ -1,2 +1,20 @@
-# Individual-account-bill-system
-This project is designed for individual business owners and is suitable for bill recording and user management, including functions such as hanging accounts, clearing accounts, settling accounts, financial calculations, and financial visualization
+# 个体户经营账本系统
+
+本项目是一个个体户经营账本系统，用于记录个体户的财务信息，包括收入、支出、账单等。
+
+## 技术栈
+
+本项目使用以下技术栈：
+
+### 后端
+
+- Fastapi：用于构建后端API
+- MySQL：用于存储数据
+- pydantic：用于数据校验
+- JWT：用于用户认证
+
+### 前端
+
+- Vue.js：用于构建前端界面
+- Vuex：用于管理状态
+- Vue Router：用于路由管理
