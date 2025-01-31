@@ -39,4 +39,12 @@ export default {
   deleteDept: (params = {}) => request.delete('/dept/delete', { params }),
   // auditlog
   getAuditLogList: (params = {}) => request.get('/auditlog/list', { params }),
+  // bills
+  getBillList: (params = {}) => request.get('/bill/list', { params }),
+  getBillDetail: (params = {}) => request.get('/bill/get', { params }),
+  createBill: (data = {}) => request.post('/bill/create', data),
+  updateBill: (data = {}) => request.post('/bill/update', data),
+  deleteBill: (params = {}) => request.delete('/bill/delete', { params }),
+  settleBillItems: (data = {}, params = {}) => request.post('/bill/settle', data, { params }),
+  refundBillItems: (data = {}, params = {}) => request.post('/bill/refund', data, { params }),
 }

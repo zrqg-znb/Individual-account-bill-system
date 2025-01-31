@@ -9,7 +9,7 @@ from .depts import depts_router
 from .menus import menus_router
 from .roles import roles_router
 from .users import users_router
-
+from .bill import bills_router
 v1_router = APIRouter()
 
 v1_router.include_router(base_router, prefix="/base")
@@ -19,3 +19,4 @@ v1_router.include_router(menus_router, prefix="/menu", dependencies=[DependPermi
 v1_router.include_router(apis_router, prefix="/api", dependencies=[DependPermisson])
 v1_router.include_router(depts_router, prefix="/dept", dependencies=[DependPermisson])
 v1_router.include_router(auditlog_router, prefix="/auditlog", dependencies=[DependPermisson])
+v1_router.include_router(bills_router, prefix="/bill", dependencies=[DependPermisson])
