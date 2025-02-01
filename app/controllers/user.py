@@ -8,7 +8,7 @@ from app.models.admin import User
 from app.schemas.login import CredentialsSchema
 from app.schemas.users import UserCreate, UserUpdate
 from app.utils.password import get_password_hash, verify_password
-
+from app.controllers.dept import dept_controller
 from .role import role_controller
 
 
@@ -55,6 +55,21 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
             raise HTTPException(status_code=403, detail="不允许重置超级管理员密码")
         user_obj.password = get_password_hash(password="123456")
         await user_obj.save()
+
+    # 模糊搜索用户名 返回用户的所有信息
+    async def search_by_like_username(self, username: str):
+        users_obj = await self.model.filter(username__icontains=username).all()
+        users = []
+        for user in users_obj:
+            dept = await dept_controller.get_dept_name(dept_id=user.dept_id)
+            user.dept_name = dept
+            search_user = {
+                "id": user.id,
+                "username": user.username,
+                "dept_name": user.dept_name,
+            }
+            users.append(search_user)
+        return users
 
 
 user_controller = UserController()

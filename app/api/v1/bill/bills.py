@@ -17,7 +17,8 @@ async def list_bills(
         page_size: int = Query(10, description="每页数量", ge=1, le=100)
 ):
     result = await bill_controller.get_bill_list(owner_name, status, page, page_size)
-    return Success(data=result)
+    return Success(data=result['data'], total=result['total'], msg="获取成功", page=result['page'],
+                   page_size=result['page_size'])
 
 
 @router.get("/get", summary="查看账单详情")

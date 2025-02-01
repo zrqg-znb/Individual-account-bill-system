@@ -37,8 +37,8 @@ class DeptController(CRUDBase[Dept, DeptCreate, DeptUpdate]):
         dept_tree = build_tree(0)
         return dept_tree
 
-    async def get_dept_info(self):
-        pass
+    async def get_dept_info(self, dept_id: int) -> Dept:
+        return await self.get(id=dept_id)
 
     async def update_dept_closure(self, obj: Dept):
         parent_depts = await DeptClosure.filter(descendant=obj.parent_id)
@@ -81,6 +81,11 @@ class DeptController(CRUDBase[Dept, DeptCreate, DeptUpdate]):
         await obj.save()
         # 删除关系
         await DeptClosure.filter(descendant=dept_id).delete()
+
+    @atomic()
+    async def get_dept_name(self, dept_id: int):
+        obj = await self.get(id=dept_id)
+        return obj.name
 
 
 dept_controller = DeptController()

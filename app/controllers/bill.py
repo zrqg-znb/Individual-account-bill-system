@@ -21,18 +21,19 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
             q &= Q(status=status)
 
         total = await self.model.filter(q).count()
-        bills = await self.model.filter(q).offset((page - 1) * page_size).limit(page_size)
+        bills = await self.model.filter(q).prefetch_related('owner').offset((page - 1) * page_size).limit(page_size)
         result = []
         for bill in bills:
             bill_dict = {
                 'id': bill.id,
                 'owner_id': bill.owner_id,
+                'owner_name': bill.owner.username,  # 使用关联的用户对象获取用户名
                 'status': bill.status.value,
                 'remark': bill.remark,
                 'total_amount': str(bill.total_amount),
                 'paid_amount': str(bill.paid_amount),
                 'created_at': bill.created_at.isoformat(),
-                'updated_at': bill.updated_at.isoformat()
+                'updated_at': bill.updated_at.isoformat(),
             }
             result.append(bill_dict)
         return {'data': result, 'total': total, 'page': page, 'page_size': page_size}

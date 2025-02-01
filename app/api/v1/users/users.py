@@ -15,11 +15,11 @@ router = APIRouter()
 
 @router.get("/list", summary="查看用户列表")
 async def list_user(
-    page: int = Query(1, description="页码"),
-    page_size: int = Query(10, description="每页数量"),
-    username: str = Query("", description="用户名称，用于搜索"),
-    email: str = Query("", description="邮箱地址"),
-    dept_id: int = Query(None, description="部门ID"),
+        page: int = Query(1, description="页码"),
+        page_size: int = Query(10, description="每页数量"),
+        username: str = Query("", description="用户名称，用于搜索"),
+        email: str = Query("", description="邮箱地址"),
+        dept_id: int = Query(None, description="部门ID"),
 ):
     q = Q()
     if username:
@@ -39,7 +39,7 @@ async def list_user(
 
 @router.get("/get", summary="查看用户")
 async def get_user(
-    user_id: int = Query(..., description="用户ID"),
+        user_id: int = Query(..., description="用户ID"),
 ):
     user_obj = await user_controller.get(id=user_id)
     user_dict = await user_obj.to_dict(exclude_fields=["password"])
@@ -48,7 +48,7 @@ async def get_user(
 
 @router.post("/create", summary="创建用户")
 async def create_user(
-    user_in: UserCreate,
+        user_in: UserCreate,
 ):
     user = await user_controller.get_by_email(user_in.email)
     if user:
@@ -60,7 +60,7 @@ async def create_user(
 
 @router.post("/update", summary="更新用户")
 async def update_user(
-    user_in: UserUpdate,
+        user_in: UserUpdate,
 ):
     user = await user_controller.update(id=user_in.id, obj_in=user_in)
     await user_controller.update_roles(user, user_in.role_ids)
@@ -69,7 +69,7 @@ async def update_user(
 
 @router.delete("/delete", summary="删除用户")
 async def delete_user(
-    user_id: int = Query(..., description="用户ID"),
+        user_id: int = Query(..., description="用户ID"),
 ):
     await user_controller.remove(id=user_id)
     return Success(msg="Deleted Successfully")
@@ -79,3 +79,11 @@ async def delete_user(
 async def reset_password(user_id: int = Body(..., description="用户ID", embed=True)):
     await user_controller.reset_password(user_id)
     return Success(msg="密码已重置为123456")
+
+
+@router.get("/search", summary="搜索用户")
+async def search_user(
+        username: str = Query("", description="用户名称，用于搜索"),
+):
+    user_objs = await user_controller.search_by_like_username(username)
+    return Success(data=user_objs)
