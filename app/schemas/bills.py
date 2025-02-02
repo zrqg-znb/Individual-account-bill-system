@@ -24,6 +24,7 @@ class BillItemCreate(BillItemBase):
 class BillItemUpdate(BaseModel):
     payment_method: Optional[PaymentMethod] = Field(None, description="结算方式")
     settler_name: Optional[str] = Field(None, description="结算人姓名")
+    settle_time: Optional[datetime] = Field(None, description="结算时间")
     remark: Optional[str] = Field(None, description="备注")
     bill_id: int
     item_ids: List[int]
@@ -72,3 +73,7 @@ class BillOut(BillBase):
         json_encoders = {
             Decimal: str
         }
+
+class BillAddItems(BaseModel):
+    bill_id: int = Field(..., description="账单ID")
+    items: List[BillItemCreate] = Field(..., description="要添加的商品列表")

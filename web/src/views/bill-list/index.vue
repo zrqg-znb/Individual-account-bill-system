@@ -202,7 +202,7 @@ onMounted(() => {
         <DetailBill
           :bill-id="currentBillId"
           @success="$table?.handleSearch()"
-          @close="showDetailModal = false"
+          @close="showDetailModal = false; $table.value?.handleSearch()"
         />
       </NDrawerContent>
     </NDrawer>

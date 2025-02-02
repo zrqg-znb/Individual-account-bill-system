@@ -4,7 +4,7 @@ from typing import List
 from app.controllers.bill import bill_controller
 from app.models.bill import BillStatus
 from app.schemas import Success
-from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate
+from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillAddItems
 
 router = APIRouter()
 
@@ -53,17 +53,7 @@ async def delete_bill(
     return Success(msg="删除成功")
 
 
-@router.post("/settle", summary="结算商品")
-async def settle_bill_items(
-        update_data: BillItemUpdate,
-        bill_id: int = Query(..., description="账单ID"),
-        item_id: int = Query(..., description="商品ID列表")
-):
-    await bill_controller.settle_bill_item(bill_id, item_id, update_data)
-    return Success(msg="结算成功")
-
-
-@router.post("/settleBatch", summary="批量结算商品")
+@router.post("/settleBatch", summary="结算商品")
 async def settle_bill_batch(
         update_data: BillItemUpdate
 ):
@@ -78,3 +68,11 @@ async def refund_bill_items(
 ):
     await bill_controller.refund_bill_items(bill_id, item_ids)
     return Success(msg="退款成功")
+
+
+@router.post("/addItems", summary="添加账单商品")
+async def add_bill_items(
+        bill_in: BillAddItems,
+):
+    await bill_controller.add_bill_items(bill_in.bill_id, bill_in.items)
+    return Success(msg="添加成功")

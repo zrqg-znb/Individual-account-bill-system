@@ -6,7 +6,7 @@ from tortoise.transactions import atomic
 
 from app.core.crud import CRUDBase
 from app.models.bill import Bill, BillItem, BillStatus, ItemStatus
-from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate
+from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillItemCreate
 
 
 class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -57,6 +57,7 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
                 'quantity': str(item.quantity),
                 'unit': item.unit,
                 'purchase_time': item.purchase_time.isoformat(),
+                'settle_time': item.settle_time.isoformat() if item.settle_time else None,
                 'buyer_name': item.buyer_name,
                 'status': item.status.value,
                 'payment_method': item.payment_method.value if item.payment_method else None,
@@ -94,34 +95,6 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         return bill_obj
 
     @atomic()
-    async def settle_bill_item(self, bill_id: int, item_id: int, update_data: BillItemUpdate):
-        # 获取账单和需要结算的商品
-        bill = await self.get(id=bill_id)
-        item = await BillItem.filter(bill_id=bill_id, id=item_id).first()
-
-        # 更新商品状态和支付信息
-        item.status = ItemStatus.PAID
-        if update_data.payment_method:
-            item.payment_method = update_data.payment_method
-        if update_data.settler_name:
-            item.settler_name = update_data.settler_name
-        if update_data.remark:
-            item.remark = update_data.remark
-        item.paid_amount = item.amount
-        await item.save()
-
-        # 更新账单状态和已支付金额
-        bill_items = await BillItem.filter(bill_id=bill_id)
-        total_amount = sum(item.amount for item in bill_items if item.status != ItemStatus.REFUNDED)
-        paid_amount = sum(item.paid_amount for item in bill_items if item.status == ItemStatus.PAID)
-
-        bill.total_amount = total_amount
-        bill.paid_amount = paid_amount
-        if bill.paid_amount >= bill.total_amount:
-            bill.status = BillStatus.PAID
-        await bill.save()
-
-    @atomic()
     async def settle_bill_items(self, bill_id: int, item_ids: List[int], update_data: BillItemUpdate):
         # 获取账单和需要结算的商品
         bill = await self.get(id=bill_id)
@@ -134,6 +107,8 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
                 item.payment_method = update_data.payment_method
             if update_data.settler_name:
                 item.settler_name = update_data.settler_name
+            if update_data.settle_time:
+                item.settle_time = update_data.settle_time
             if update_data.remark:
                 item.remark = update_data.remark
             item.paid_amount = item.amount
@@ -173,6 +148,35 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         if bill.paid_amount < bill.total_amount:
             bill.status = BillStatus.UNPAID
         await bill.save()
+
+    @atomic()
+    async def add_bill_items(self, bill_id: int, items: List[BillItemCreate]):
+        # 获取账单
+        bill = await self.get(id=bill_id)
+
+        # 计算新增商品的总金额
+        total_amount = Decimal('0')
+        for item in items:
+            total_amount += item.price * item.quantity
+
+        # 创建账单项目
+        bill_items = []
+        for item in items:
+            item_amount = item.price * item.quantity
+            bill_items.append(
+                BillItem(
+                    bill=bill,
+                    amount=item_amount,
+                    **item.model_dump()
+                )
+            )
+        await BillItem.bulk_create(bill_items)
+
+        # 更新账单总金额
+        bill.total_amount += total_amount
+        bill.status = BillStatus.UNPAID
+        await bill.save()
+        return bill
 
 
 bill_controller = BillController()

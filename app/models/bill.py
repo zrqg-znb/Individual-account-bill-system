@@ -44,6 +44,7 @@ class BillItem(BaseModel, TimestampMixin):
     status = fields.CharEnumField(ItemStatus, default=ItemStatus.UNPAID, description="商品状态", index=True)
     payment_method = fields.CharEnumField(PaymentMethod, default=PaymentMethod.CREDIT, description="结算方式")
     settler_name = fields.CharField(max_length=50, null=True, description="结算人姓名", index=True)
+    settle_time = fields.DatetimeField(null=True, description="结算时间", index=True)
     remark = fields.TextField(null=True, description="备注")
     amount = fields.DecimalField(max_digits=10, decimal_places=2, description="商品总金额")
     paid_amount = fields.DecimalField(max_digits=10, decimal_places=2, default=0, description="已支付金额")
