@@ -24,6 +24,9 @@ class BillItemCreate(BillItemBase):
 class BillItemUpdate(BaseModel):
     payment_method: Optional[PaymentMethod] = Field(None, description="结算方式")
     settler_name: Optional[str] = Field(None, description="结算人姓名")
+    remark: Optional[str] = Field(None, description="备注")
+    bill_id: int
+    item_ids: List[int]
 
 
 class BillItemOut(BillItemBase):

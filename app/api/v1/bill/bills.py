@@ -53,13 +53,21 @@ async def delete_bill(
     return Success(msg="删除成功")
 
 
-@router.post("/settle", summary="结算账单商品")
+@router.post("/settle", summary="结算商品")
 async def settle_bill_items(
         update_data: BillItemUpdate,
         bill_id: int = Query(..., description="账单ID"),
-        item_ids: List[int] = Query(..., description="商品ID列表")
+        item_id: int = Query(..., description="商品ID列表")
 ):
-    await bill_controller.settle_bill_items(bill_id, item_ids, update_data)
+    await bill_controller.settle_bill_item(bill_id, item_id, update_data)
+    return Success(msg="结算成功")
+
+
+@router.post("/settleBatch", summary="批量结算商品")
+async def settle_bill_batch(
+        update_data: BillItemUpdate
+):
+    await bill_controller.settle_bill_items(update_data.bill_id, update_data.item_ids, update_data)
     return Success(msg="结算成功")
 
 

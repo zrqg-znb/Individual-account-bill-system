@@ -13,7 +13,8 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
     def __init__(self):
         super().__init__(model=Bill)
 
-    async def get_bill_list(self, owner_name: str = None, status: BillStatus = None, page: int = 1, page_size: int = 10):
+    async def get_bill_list(self, owner_name: str = None, status: BillStatus = None, page: int = 1,
+                            page_size: int = 10):
         q = Q()
         if owner_name:
             q &= Q(owner__username__contains=owner_name)
@@ -93,6 +94,34 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         return bill_obj
 
     @atomic()
+    async def settle_bill_item(self, bill_id: int, item_id: int, update_data: BillItemUpdate):
+        # 获取账单和需要结算的商品
+        bill = await self.get(id=bill_id)
+        item = await BillItem.filter(bill_id=bill_id, id=item_id).first()
+
+        # 更新商品状态和支付信息
+        item.status = ItemStatus.PAID
+        if update_data.payment_method:
+            item.payment_method = update_data.payment_method
+        if update_data.settler_name:
+            item.settler_name = update_data.settler_name
+        if update_data.remark:
+            item.remark = update_data.remark
+        item.paid_amount = item.amount
+        await item.save()
+
+        # 更新账单状态和已支付金额
+        bill_items = await BillItem.filter(bill_id=bill_id)
+        total_amount = sum(item.amount for item in bill_items if item.status != ItemStatus.REFUNDED)
+        paid_amount = sum(item.paid_amount for item in bill_items if item.status == ItemStatus.PAID)
+
+        bill.total_amount = total_amount
+        bill.paid_amount = paid_amount
+        if bill.paid_amount >= bill.total_amount:
+            bill.status = BillStatus.PAID
+        await bill.save()
+
+    @atomic()
     async def settle_bill_items(self, bill_id: int, item_ids: List[int], update_data: BillItemUpdate):
         # 获取账单和需要结算的商品
         bill = await self.get(id=bill_id)
@@ -105,6 +134,8 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
                 item.payment_method = update_data.payment_method
             if update_data.settler_name:
                 item.settler_name = update_data.settler_name
+            if update_data.remark:
+                item.remark = update_data.remark
             item.paid_amount = item.amount
             await item.save()
 
@@ -112,7 +143,7 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         bill_items = await BillItem.filter(bill_id=bill_id)
         total_amount = sum(item.amount for item in bill_items if item.status != ItemStatus.REFUNDED)
         paid_amount = sum(item.paid_amount for item in bill_items if item.status == ItemStatus.PAID)
-        
+
         bill.total_amount = total_amount
         bill.paid_amount = paid_amount
         if bill.paid_amount >= bill.total_amount:
@@ -136,7 +167,7 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         bill_items = await BillItem.filter(bill_id=bill_id)
         total_amount = sum(item.amount for item in bill_items if item.status != ItemStatus.REFUNDED)
         paid_amount = sum(item.paid_amount for item in bill_items if item.status == ItemStatus.PAID)
-        
+
         bill.total_amount = total_amount
         bill.paid_amount = paid_amount
         if bill.paid_amount < bill.total_amount:

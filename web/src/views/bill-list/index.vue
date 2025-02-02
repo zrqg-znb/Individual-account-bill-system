@@ -42,6 +42,16 @@ const columns = [
     width: 'auto',
     align: 'center',
     ellipsis: { tooltip: true },
+    render(row) {
+      // paid 是已付款，unpaid是未付款，refunded是已退款
+      if (row.status === "paid") {
+        return "已付款";
+      } else if (row.status === "unpaid") {
+        return "未付款";
+      } else if (row.status === "refunded") {
+        return "已退款";
+      }
+    }
   },
   {
     title: '总金额',

@@ -152,7 +152,7 @@ CREATE TABLE IF NOT EXISTS `bill_item` (
     `purchase_time` DATETIME(6) NOT NULL  COMMENT '购买时间',
     `buyer_name` VARCHAR(50) NOT NULL  COMMENT '购买人姓名',
     `status` VARCHAR(8) NOT NULL  COMMENT '商品状态' DEFAULT 'unpaid',
-    `payment_method` VARCHAR(6)   COMMENT '结算方式',
+    `payment_method` VARCHAR(6) NOT NULL  COMMENT '结算方式' DEFAULT 'credit',
     `settler_name` VARCHAR(50)   COMMENT '结算人姓名',
     `remark` LONGTEXT   COMMENT '备注',
     `amount` DECIMAL(10,2) NOT NULL  COMMENT '商品总金额',

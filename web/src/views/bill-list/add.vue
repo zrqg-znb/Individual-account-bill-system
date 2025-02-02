@@ -62,7 +62,7 @@ async function handleSubmit() {
     await api.createBill(formValue.value);
     emit("success");
     emit("close");
-    $message.success("创建账单成功")
+    $message.success("创建账单成功");
   } catch (error) {
     console.error("表单验证失败:", error);
   }
