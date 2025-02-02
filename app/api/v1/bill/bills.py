@@ -4,7 +4,7 @@ from typing import List
 from app.controllers.bill import bill_controller
 from app.models.bill import BillStatus
 from app.schemas import Success
-from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillAddItems
+from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillAddItems, BillExportRequest
 
 router = APIRouter()
 
@@ -76,3 +76,10 @@ async def add_bill_items(
 ):
     await bill_controller.add_bill_items(bill_in.bill_id, bill_in.items)
     return Success(msg="添加成功")
+
+@router.post("/export", summary="导出账单")
+async def export_bill(
+        export_request: BillExportRequest,
+):
+    result = await bill_controller.export_bill(export_request.bill_id, export_request.export_time)
+    return Success(data=result)

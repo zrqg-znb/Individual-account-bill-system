@@ -1,3 +1,4 @@
+import datetime
 from decimal import Decimal
 from typing import List
 
@@ -5,8 +6,10 @@ from tortoise.expressions import Q
 from tortoise.transactions import atomic
 
 from app.core.crud import CRUDBase
+from app.models import User, Dept
 from app.models.bill import Bill, BillItem, BillStatus, ItemStatus
 from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillItemCreate
+from app.utils.exportBill import generate_pdf
 
 
 class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
@@ -177,6 +180,30 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         bill.status = BillStatus.UNPAID
         await bill.save()
         return bill
+
+    async def export_bill(self, bill_id: int, export_time: datetime):
+        bill_obj = await self.get_bill_detail(bill_id)
+        owner = await User.get(id=bill_obj['owner_id'])
+        dept = await Dept.get(id=owner.dept_id)
+        # 构建导出信息
+        export_info = {
+            'owner_name': owner.username,
+            'owner_phone': owner.phone,
+            'owner_email': owner.email,
+            'owner_alias': owner.alias,
+            'owner_dept': dept.name,
+            'status': bill_obj['status'],
+            'total_amount': bill_obj['total_amount'],
+            'paid_amount': bill_obj['paid_amount'],
+            'created_at': bill_obj['created_at'],
+            'items': bill_obj['items'],
+            'remark': bill_obj['remark'],
+            'export_time': export_time
+        }
+        file_name = f"{bill_id}_{owner.username}_{export_time}.pdf"
+        generate_pdf(export_info, file_name)
+
+        return file_name
 
 
 bill_controller = BillController()

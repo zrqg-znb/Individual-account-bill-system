@@ -74,6 +74,12 @@ class BillOut(BillBase):
             Decimal: str
         }
 
+
 class BillAddItems(BaseModel):
     bill_id: int = Field(..., description="账单ID")
     items: List[BillItemCreate] = Field(..., description="要添加的商品列表")
+
+
+class BillExportRequest(BaseModel):
+    bill_id: int = Field(..., description="账单ID")
+    export_time: datetime = Field(..., description="导出时间")
