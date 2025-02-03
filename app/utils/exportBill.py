@@ -117,7 +117,9 @@ def generate_pdf(export_info, output_filename):
                     payment_method = '微信'
 
         item['purchase_time'] = parse_time(item['purchase_time'])
-        item['settle_time'] = parse_time(item['settle_time'])
+        settle_time = '---'
+        if item['settle_time']:
+            settle_time = parse_time(item['settle_time']).strftime('%Y-%m-%d %H:%M:%S')
         table_data.append([
             item['product_name'],
             item['price'],
@@ -129,7 +131,7 @@ def generate_pdf(export_info, output_filename):
             payment_method,
             item['amount'],
             item['paid_amount'],
-            item['settle_time'].strftime('%Y-%m-%d %H:%M:%S'),
+            settle_time,
             item['settler_name'],
             item['remark'],
         ])

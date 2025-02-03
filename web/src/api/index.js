@@ -48,11 +48,9 @@ export default {
   createBill: (data = {}) => request.post("/bill/create", data),
   updateBill: (data = {}) => request.post("/bill/update", data),
   deleteBill: (params = {}) => request.delete("/bill/delete", { params }),
-  settleBillItem: (data = {}, params = {}) =>
-    request.post("/bill/settle", data, { params }),
   settleBillBatch: (data = {}) => request.post("/bill/settleBatch", data),
-  refundBillItems: (data = {}, params = {}) =>
-    request.post("/bill/refund", data, { params }),
+  refundBillBatch: (data = {}) => request.post("/bill/refundBatch", data),
   addItems: (data = {}) => request.post("/bill/addItems", data),
-  exportBill: (data = {}) => request.post("/bill/export", data)
+  exportBill: (data = {}) => request.post("/bill/export", data),
+  refundItem: (data = {}) => request.post("/bill/refundItem", data),
 };

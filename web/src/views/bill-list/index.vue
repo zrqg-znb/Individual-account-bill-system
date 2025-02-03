@@ -10,7 +10,6 @@ import DetailBill from "./detail.vue";
 import api from "@/api";
 import TheIcon from "@/components/icon/TheIcon.vue";
 import { formatDate } from "@/utils";
-import { max } from "lodash-es";
 
 const message = useMessage();
 const showAddModal = ref(false);

@@ -8,7 +8,7 @@ from tortoise.transactions import atomic
 from app.core.crud import CRUDBase
 from app.models import User, Dept
 from app.models.bill import Bill, BillItem, BillStatus, ItemStatus
-from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillItemCreate
+from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillItemCreate, BillItemRefund
 from app.utils.exportBill import generate_pdf
 
 
@@ -129,15 +129,20 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         await bill.save()
 
     @atomic()
-    async def refund_bill_items(self, bill_id: int, item_ids: List[int]):
+    async def refund_bill_items(self, bill_id: int, item_ids: List[int], refund_data):
         # 获取账单和需要退款的商品
         bill = await self.get(id=bill_id)
         items = await BillItem.filter(bill_id=bill_id, id__in=item_ids)
 
         # 更新商品状态为已退款
         for item in items:
-            if item.status == ItemStatus.PAID:
-                item.status = ItemStatus.REFUNDED
+            item.status = ItemStatus.REFUNDED
+            if refund_data.settler_name:
+                item.settler_name = refund_data.settler_name
+            if refund_data.remark:
+                item.remark = refund_data.remark
+            if refund_data.settle_time:
+                item.settle_time = refund_data.settle_time
                 item.paid_amount = 0
                 await item.save()
 
@@ -181,6 +186,7 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         await bill.save()
         return bill
 
+    @atomic()
     async def export_bill(self, bill_id: int, export_time: datetime):
         bill_obj = await self.get_bill_detail(bill_id)
         owner = await User.get(id=bill_obj['owner_id'])
@@ -205,6 +211,26 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         url = generate_pdf(export_info, file_name)
 
         return url
+
+    @atomic()
+    async def refund_bill_item(self, refund_data: BillItemRefund):
+        bill = await self.get(id=refund_data.bill_id)
+        item = await BillItem.get(id=refund_data.item_id)
+        bill.total_amount -= item.amount
+        item.remark = refund_data.remark
+        item.quantity = refund_data.quantity
+
+        amount = item.price * refund_data.quantity
+        item.amount = amount
+        bill.total_amount += amount
+
+        if refund_data.quantity == 0:
+            item.status = ItemStatus.REFUNDED
+        if bill.paid_amount == bill.total_amount:
+            bill.status = BillStatus.PAID
+
+        await item.save()
+        await bill.save()
 
 
 bill_controller = BillController()

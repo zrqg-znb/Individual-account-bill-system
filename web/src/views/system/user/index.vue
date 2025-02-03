@@ -298,6 +298,20 @@ const validateAddUser = {
       trigger: ['input', 'blur'],
     },
   ],
+  phone:[
+    {
+      required: true,
+      message: '请输入手机号码',
+      trigger: ['input', 'blur'],
+    }
+  ],
+  alias:[
+    {
+      required: true,
+      message: '请输入姓名',
+      trigger: ['input', 'blur'],
+    }
+  ],
   email: [
     {
       required: true,
@@ -405,6 +419,15 @@ const validateAddUser = {
                 @keypress.enter="$table?.handleSearch()"
               />
             </QueryBarItem>
+            <QueryBarItem label="手机" :label-width="40">
+              <NInput
+                v-model:value="queryItems.phone"
+                clearable
+                type="text"
+                placeholder="请输入手机号"
+                @keypress.enter="$table?.handleSearch()"
+              />
+            </QueryBarItem>
           </template>
         </CrudTable>
 
@@ -425,6 +448,12 @@ const validateAddUser = {
           >
             <NFormItem label="用户名称" path="username">
               <NInput v-model:value="modalForm.username" clearable placeholder="请输入用户名称" />
+            </NFormItem>
+            <NFormItem label="手机" path="phone">
+              <NInput v-model:value="modalForm.phone" clearable placeholder="请输入手机" />
+            </NFormItem>
+            <NFormItem label="姓名" path="alias">
+              <NInput v-model:value="modalForm.alias" clearable placeholder="请输入姓名" />
             </NFormItem>
             <NFormItem label="邮箱" path="email">
               <NInput v-model:value="modalForm.email" clearable placeholder="请输入邮箱" />
@@ -475,13 +504,13 @@ const validateAddUser = {
                 :default-value="true"
               />
             </NFormItem>
-            <NFormItem label="部门" path="dept_id">
+            <NFormItem label="地址" path="dept_id">
               <NTreeSelect
                 v-model:value="modalForm.dept_id"
                 :options="deptOption"
                 key-field="id"
                 label-field="name"
-                placeholder="请选择部门"
+                placeholder="请选择地址"
                 clearable
                 default-expand-all
               ></NTreeSelect>

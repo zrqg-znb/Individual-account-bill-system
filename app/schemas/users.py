@@ -17,13 +17,15 @@ class BaseUser(BaseModel):
 
 
 class UserCreate(BaseModel):
-    email: EmailStr = Field(example="admin@qq.com")
+    email: EmailStr = Field(example="test@qq.com")
     username: str = Field(example="admin")
     password: str = Field(example="123456")
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False
     role_ids: Optional[List[int]] = []
     dept_id: Optional[int] = Field(0, description="部门ID")
+    alias: Optional[str] = None
+    phone: Optional[str] = None
 
     def create_dict(self):
         return self.model_dump(exclude_unset=True, exclude={"role_ids"})
@@ -37,6 +39,8 @@ class UserUpdate(BaseModel):
     is_superuser: Optional[bool] = False
     role_ids: Optional[List[int]] = []
     dept_id: Optional[int] = 0
+    alias: Optional[str] = None
+    phone: Optional[str] = None
 
 
 class UpdatePassword(BaseModel):

@@ -4,7 +4,7 @@ from pydantic import BaseModel, Field
 
 
 class CredentialsSchema(BaseModel):
-    username: str = Field(..., description="用户名称", example="admin")
+    phone: str = Field(..., description="手机号", example="13100001111")
     password: str = Field(..., description="密码", example="123456")
 
 

@@ -15,10 +15,10 @@
         </h5>
         <div mt-30>
           <n-input
-            v-model:value="loginInfo.username"
+            v-model:value="loginInfo.phone"
             autofocus
             class="h-50 items-center pl-10 text-16"
-            placeholder="admin"
+            placeholder="手机号"
             :maxlength="20"
           />
         </div>
@@ -28,7 +28,7 @@
             class="h-50 items-center pl-10 text-16"
             type="password"
             show-password-on="mousedown"
-            placeholder="123456"
+            placeholder="密码"
             :maxlength="20"
             @keypress.enter="handleLogin"
           />
@@ -64,7 +64,7 @@ const { query } = useRoute()
 const { t } = useI18n({ useScope: 'global' })
 
 const loginInfo = ref({
-  username: '',
+  phone: '',
   password: '',
 })
 
@@ -73,22 +73,22 @@ initLoginInfo()
 function initLoginInfo() {
   const localLoginInfo = lStorage.get('loginInfo')
   if (localLoginInfo) {
-    loginInfo.value.username = localLoginInfo.username || ''
+    loginInfo.value.phone = localLoginInfo.phone || ''
     loginInfo.value.password = localLoginInfo.password || ''
   }
 }
 
 const loading = ref(false)
 async function handleLogin() {
-  const { username, password } = loginInfo.value
-  if (!username || !password) {
-    $message.warning(t('views.login.message_input_username_password'))
+  const { phone, password } = loginInfo.value
+  if (!phone || !password) {
+    $message.warning(t('views.login.message_input_phone_password'))
     return
   }
   try {
     loading.value = true
     $message.loading(t('views.login.message_login_success'))
-    const res = await api.login({ username, password: password.toString() })
+    const res = await api.login({ phone, password: password.toString() })
     $message.success(t('views.login.message_login_success'))
     setToken(res.data.access_token)
     await addDynamicRoutes()

@@ -1,9 +1,11 @@
 <script setup>
-import { ref, onMounted, h } from "vue";
+import { ref, onMounted, h, withDirectives, resolveDirective, defineEmits } from "vue";
 import api from "@/api";
 import { NButton, NInput, useMessage, NDynamicInput, NDatePicker } from "naive-ui";
 import { formatDateTime, formatDate } from "@/utils";
+import TheIcon from "@/components/icon/TheIcon.vue";
 
+const emit = defineEmits(["success", "close"]);
 const message = useMessage();
 const props = defineProps({
   billId: {
@@ -20,12 +22,16 @@ let status = ref("");
 const items = ref([]);
 let settleShow = ref(false);
 let settleShowBatch = ref(false);
+let refundShow = ref(false);
+let refundShowBatch = ref(false);
 let addItemsShow = ref(false);
 let payment_method = ref("cash");
 let settler_name = ref("");
 let settle_remark = ref("");
 let settle_time = ref("");
 let rowToSettle = ref(null);
+let refundQuantity = ref(1);
+let rowToRefund = ref(null);
 const paymentMethodOptions = [
   {
     label: "现金",
@@ -55,6 +61,7 @@ const formValue = ref({
     }
   ]
 });
+const vPermission = resolveDirective("permission");
 
 // 获取账单详情
 async function fetchBillDetail() {
@@ -94,6 +101,16 @@ function closeSettleBatchModal() {
   settleShowBatch.value = false;
 }
 
+// 关闭退货模态框
+function closeRefundModal() {
+  refundShow.value = false;
+}
+
+// 关闭批量退款模态框
+function closeRefundBatchModal() {
+  refundShowBatch.value = false;
+}
+
 // 监听表格 选项卡改动
 function handleSelectionChange(rows) {
   selectItems.value = [];
@@ -105,7 +122,7 @@ function handleSelectionChange(rows) {
 // 处理单个结算
 async function handleSettle(row) {
   if (row.status === "refunded") {
-    message.warning("该商品已退款，请勿重复操作");
+    message.warning("该商品已退款，若仍结算请重新添加！");
     return;
   } else if (row.status === "paid") {
     message.warning("该商品已付款，请勿重复操作");
@@ -114,6 +131,89 @@ async function handleSettle(row) {
   settleShow.value = true;
   rowToSettle.value = row;
   settle_time.value = row.settle_time ? new Date(row.settle_time) : null;
+}
+
+// 处理单个退货模态框
+async function handleRefund(row) {
+  if (row.status === "paid") {
+    message.warning("该商品已付款，请勿重复操作");
+    return;
+  } else if (row.status === "refunded") {
+    message.warning("该商品已退款，请勿重复操作");
+    return;
+  }
+  if (row.quantity === "1"){
+    message.warning("当前商品仅购买一个，若要退货请直接勾选再进行批量退款");
+    return;
+  }
+  refundShow.value = true;
+  settle_time.value = null;
+  rowToRefund.value = row;
+}
+
+// 执行单个退款
+async function confirmRefund() {
+  if (refundQuantity.value <= 0){
+    message.warning("退货数量不能小于1!");
+    return;
+  }
+  if (refundQuantity.value > Number(rowToRefund.value.quantity)) {
+    message.warning("退货数量不能大于已购商品数量!");
+    return;
+  }
+  try {
+    const response = await api.refundItem({
+      bill_id: props.billId,
+      item_id: rowToRefund.value.id,
+      quantity: Number(rowToRefund.value.quantity) - refundQuantity.value,
+      remark: settle_remark.value
+    });
+    if (response.code === 200) {
+      message.success("退货成功");
+      refundShow.value = false;
+      await fetchBillDetail();
+    } else {
+      message.error("退货失败");
+    }
+  } catch (error){
+    console.error(error)
+    message.error("退货失败,稍后重试");
+  }
+
+}
+
+// 打开批量退款模态框
+async function handleRefundBatch() {
+  if (selectItems.value.length === 0) {
+    message.warning("请选择要退款的商品");
+    return;
+  }
+  refundShowBatch.value = true;
+  settle_time.value = null;
+}
+
+// 执行批量退款
+async function confirmRefundBatch() {
+  try {
+    const response = await api.refundBillBatch(
+      {
+        settler_name: settler_name.value,
+        remark: settle_remark.value,
+        settle_time: settle_time.value,
+        bill_id: props.billId,
+        item_ids: selectItems.value.map((item) => item)
+      }
+    );
+    if (response.code === 200) {
+      message.success("批量退款成功");
+      refundShowBatch.value = false;
+      await fetchBillDetail();
+    } else {
+      message.error("批量退款失败" + response.msg);
+    }
+  } catch (error) {
+    message.error("退款失败,稍后重试");
+  }
 }
 
 // 处理批量结算
@@ -129,7 +229,6 @@ async function handleSettleBatch() {
 // 批量结算确认按钮
 async function confirmSettleBatch() {
   try {
-    console.log(selectItems)
     const response = await api.settleBillBatch(
       {
         payment_method: payment_method.value,
@@ -212,18 +311,7 @@ const columns = [
     key: "unit"
   },
   {
-    title: "购买时间",
-    key: "purchase_time",
-    render(row) {
-      return formatDateTime(row.purchase_time);
-    }
-  },
-  {
-    title: "购买人",
-    key: "buyer_name"
-  },
-  {
-    title: "已/未付款",
+    title: "状态",
     key: "status",
     render(row) {
       // paid 是已付款，unpaid是未付款，refunded是已退款
@@ -235,6 +323,17 @@ const columns = [
         return "已退款";
       }
     }
+  },
+  {
+    title: "购买时间",
+    key: "purchase_time",
+    render(row) {
+      return formatDateTime(row.purchase_time);
+    }
+  },
+  {
+    title: "购买人",
+    key: "buyer_name"
   },
   {
     title: "结账人",
@@ -272,15 +371,37 @@ const columns = [
     key: "action",
     fixed: "right",
     render(row) {
-      return h(
-        NButton,
-        {
-          size: "small",
-          type: "primary",
-          onClick: () => handleSettle(row)
-        },
-        { default: () => "结算" }
-      );
+      return [
+        withDirectives(
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "primary",
+              style: "margin-right: 8px;",
+              onClick: () => handleSettle(row)
+            },
+            {
+              default: () => "结算"
+            }
+          ),
+          [[vPermission, "post/api/v1/bill/settleBatch"]]
+        ),
+        withDirectives(
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "warning",
+              onClick: () => handleRefund(row)
+            },
+            {
+              default: () => "退货"
+            }
+          ),
+          [[vPermission, "post/api/v1/bill/refundBatch"]]
+        )
+      ];
     }
   }
 ];
@@ -381,6 +502,51 @@ onMounted(() => {
       <div style="text-align: right; margin-top: 10px;">
         <n-button type="default" class="mr-10" @click="closeSettleBatchModal">取消结算</n-button>
         <n-button type="primary" @click="confirmSettleBatch">确认结算</n-button>
+      </div>
+    </n-card>
+  </n-modal>
+  <!--单个退货商品-->
+  <n-modal v-model:show="refundShow">
+    <n-card title="商品退货" size="huge" role="dialog" style="width: 600px" aria-modal="true" :bordered="false">
+      <n-alert title="退货注意" type="warning" closable>
+        退货商品数量不可大于、等于已购买数量！若要全部退货，请退出此页面勾选商品进行“批量退款”操作。
+      </n-alert>
+      <n-divider></n-divider>
+      <n-form>
+        <n-form-item label="商品名称" :label-width="120">
+          <n-input v-model:value="rowToRefund.product_name" disabled />
+        </n-form-item>
+        <n-form-item label="商品数量" :label-width="120">
+          <n-input v-model:value="rowToRefund.quantity" disabled />
+        </n-form-item>
+        <n-form-item label="退货数量" :label-width="120" path="refundQuantity">
+          <n-input-number v-model:value="refundQuantity" placeholder="输入退货数量" />
+        </n-form-item>
+        <n-form-item label="商品单价" :label-width="120">
+          <n-input v-model:value="rowToRefund.price" disabled />
+        </n-form-item>
+        <n-form-item label="单位" :label-width="120">
+          <n-input v-model:value="rowToRefund.unit" disabled />
+        </n-form-item>
+        <n-form-item label="退货原因" :label-width="120">
+          <n-input v-model:value="settle_remark" placeholder="输入退货原因、退货人、退货时间" />
+        </n-form-item>
+      </n-form>
+      <div style="text-align: right; margin-top: 10px;">
+        <n-button type="default" class="mr-10" @click="closeRefundModal">取消退款</n-button>
+        <n-button type="primary" @click="confirmRefund">确认退款</n-button>
+      </div>
+    </n-card>
+  </n-modal>
+  <!--批量退款商品-->
+  <n-modal v-model:show="refundShowBatch">
+    <n-card title="商品批量退款" size="huge" role="dialog" style="width: 600px" aria-modal="true" :bordered="false">
+      <n-input class="mt-10" v-model:value="settler_name" placeholder="输入退款人姓名" />
+      <n-input class="mt-10" v-model:value="settle_remark" placeholder="输入退款原因" />
+      <n-date-picker class="mt-10" v-model:value="settle_time" type="datetime" placeholder="选择退款时间" />
+      <div style="text-align: right; margin-top: 10px;">
+        <n-button type="default" class="mr-10" @click="closeRefundBatchModal">取消退款</n-button>
+        <n-button type="primary" @click="confirmRefundBatch">确认退款</n-button>
       </div>
     </n-card>
   </n-modal>

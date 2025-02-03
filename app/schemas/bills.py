@@ -30,6 +30,13 @@ class BillItemUpdate(BaseModel):
     item_ids: List[int]
 
 
+class BillRefundBatch(BaseModel):
+    bill_id: int = Field(..., description="账单ID")
+    item_ids: List[int] = Field(..., description="要退款的商品ID列表")
+    remark: Optional[str] = Field(None, description="退款原因")
+    settler_name: Optional[str] = Field(None, description="结算人姓名")
+    settle_time: Optional[datetime] = Field(None, description="结算时间")
+
 class BillItemOut(BillItemBase):
     id: int
     status: ItemStatus
@@ -83,3 +90,10 @@ class BillAddItems(BaseModel):
 class BillExportRequest(BaseModel):
     bill_id: int = Field(..., description="账单ID")
     export_time: datetime = Field(..., description="导出时间")
+
+
+class BillItemRefund(BaseModel):
+    item_id: int = Field(..., description="账单商品ID")
+    bill_id: int = Field(..., description="账单ID")
+    remark: Optional[str] = Field(None, description="退货原因")
+    quantity: Decimal = Field(..., description="商品数量")

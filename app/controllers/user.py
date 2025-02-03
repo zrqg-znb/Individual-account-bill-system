@@ -19,6 +19,9 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
     async def get_by_email(self, email: str) -> Optional[User]:
         return await self.model.filter(email=email).first()
 
+    async def get_by_phone(self, phone: str) -> Optional[User]:
+        return await self.model.filter(phone=phone).first()
+
     async def get_by_username(self, username: str) -> Optional[User]:
         return await self.model.filter(username=username).first()
 
@@ -33,7 +36,7 @@ class UserController(CRUDBase[User, UserCreate, UserUpdate]):
         await user.save()
 
     async def authenticate(self, credentials: CredentialsSchema) -> Optional["User"]:
-        user = await self.model.filter(username=credentials.username).first()
+        user = await self.model.filter(phone=credentials.phone).first()
         if not user:
             raise HTTPException(status_code=400, detail="无效的用户名")
         verified = verify_password(credentials.password, user.password)

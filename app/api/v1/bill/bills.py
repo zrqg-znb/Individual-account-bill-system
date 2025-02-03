@@ -4,7 +4,8 @@ from typing import List
 from app.controllers.bill import bill_controller
 from app.models.bill import BillStatus
 from app.schemas import Success
-from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillAddItems, BillExportRequest
+from app.schemas.bills import BillCreate, BillUpdate, BillItemUpdate, BillAddItems, BillExportRequest, BillRefundBatch, \
+    BillItemRefund
 
 router = APIRouter()
 
@@ -61,12 +62,19 @@ async def settle_bill_batch(
     return Success(msg="结算成功")
 
 
-@router.post("/refund", summary="退款账单商品")
-async def refund_bill_items(
-        bill_id: int = Query(..., description="账单ID"),
-        item_ids: List[int] = Query(..., description="商品ID列表")
+@router.post("/refundItem", summary="账单商品退货")
+async def refund_bill_item(
+        refund_data: BillItemRefund
 ):
-    await bill_controller.refund_bill_items(bill_id, item_ids)
+    await bill_controller.refund_bill_item(refund_data)
+    return Success(msg="退货成功")
+
+
+@router.post("/refundBatch", summary="批量退款账单商品")
+async def refund_bill_items_batch(
+        refund_data: BillRefundBatch
+):
+    await bill_controller.refund_bill_items(refund_data.bill_id, refund_data.item_ids, refund_data)
     return Success(msg="退款成功")
 
 
