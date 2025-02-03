@@ -96,7 +96,7 @@ const columns = [
     },
   },
   {
-    title: '部门',
+    title: '地址',
     key: 'dept.name',
     align: 'center',
     width: 40,

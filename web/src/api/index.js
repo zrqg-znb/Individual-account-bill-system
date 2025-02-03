@@ -1,7 +1,8 @@
 import { request } from "@/utils";
 
 export default {
-  login: (data) => request.post("/base/access_token", data, { noNeedToken: true }),
+  login: (data) =>
+    request.post("/base/access_token", data, { noNeedToken: true }),
   getUserInfo: () => request.get("/base/userinfo"),
   getUserMenu: () => request.get("/base/usermenu"),
   getUserApi: () => request.get("/base/userapi"),
@@ -21,7 +22,8 @@ export default {
   updateRole: (data = {}) => request.post("/role/update", data),
   deleteRole: (params = {}) => request.delete("/role/delete", { params }),
   updateRoleAuthorized: (data = {}) => request.post("/role/authorized", data),
-  getRoleAuthorized: (params = {}) => request.get("/role/authorized", { params }),
+  getRoleAuthorized: (params = {}) =>
+    request.get("/role/authorized", { params }),
   // menus
   getMenus: (params = {}) => request.get("/menu/list", { params }),
   createMenu: (data = {}) => request.post("/menu/create", data),
@@ -46,8 +48,11 @@ export default {
   createBill: (data = {}) => request.post("/bill/create", data),
   updateBill: (data = {}) => request.post("/bill/update", data),
   deleteBill: (params = {}) => request.delete("/bill/delete", { params }),
-  settleBillItem: (data = {}, params = {}) => request.post("/bill/settle", data, { params }),
+  settleBillItem: (data = {}, params = {}) =>
+    request.post("/bill/settle", data, { params }),
   settleBillBatch: (data = {}) => request.post("/bill/settleBatch", data),
-  refundBillItems: (data = {}, params = {}) => request.post("/bill/refund", data, { params }),
-  addItems: (data = {}) => request.post("/bill/addItems", data)
+  refundBillItems: (data = {}, params = {}) =>
+    request.post("/bill/refund", data, { params }),
+  addItems: (data = {}) => request.post("/bill/addItems", data),
+  exportBill: (data = {}) => request.post("/bill/export", data)
 };

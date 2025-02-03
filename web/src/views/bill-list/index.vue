@@ -1,46 +1,69 @@
 <script setup>
-import { ref, onMounted, withDirectives, h, resolveDirective } from 'vue'
-import CommonPage from '@/components/page/CommonPage.vue'
-import CrudTable from '@/components/table/CrudTable.vue'
-import QueryBarItem from '@/components/query-bar/QueryBarItem.vue'
-import { NButton, NInput, NSelect } from 'naive-ui'
-import AddBill from './add.vue'
-import DetailBill from './detail.vue'
+import { ref, onMounted, withDirectives, h, resolveDirective } from "vue";
+import CommonPage from "@/components/page/CommonPage.vue";
+import CrudTable from "@/components/table/CrudTable.vue";
+import QueryBarItem from "@/components/query-bar/QueryBarItem.vue";
+import { NButton, NInput, NSelect, useMessage } from "naive-ui";
+import AddBill from "./add.vue";
+import DetailBill from "./detail.vue";
 
-import api from '@/api'
-import TheIcon from '@/components/icon/TheIcon.vue'
-import { formatDate } from '@/utils'
+import api from "@/api";
+import TheIcon from "@/components/icon/TheIcon.vue";
+import { formatDate } from "@/utils";
+import { max } from "lodash-es";
 
-const showAddModal = ref(false)
-const showDetailModal = ref(false)
-const currentBillId = ref(null)
+const message = useMessage();
+const showAddModal = ref(false);
+const showDetailModal = ref(false);
+const currentBillId = ref(null);
 
-const $table = ref(null)
-const queryItems = ref({})
-const vPermission = resolveDirective('permission')
+const $table = ref(null);
+const queryItems = ref({});
+const vPermission = resolveDirective("permission");
 
 function handleDetail(row) {
-  currentBillId.value = row.id
-  showDetailModal.value = true
+  currentBillId.value = row.id;
+  showDetailModal.value = true;
 }
 
 function handleAdd() {
-  showAddModal.value = true
+  showAddModal.value = true;
+}
+
+async function handleExport(row) {
+  message.loading("正在导出...");
+  try {
+
+    const exportTime = new Date();
+    const response = await api.exportBill({
+      bill_id: row.id,
+      export_time: exportTime.toISOString()
+    });
+    message.destroyAll();
+    if (response.code === 200) {
+      message.success("导出成功");
+      window.open(response.data);
+    } else {
+      message.error("导出失败");
+    }
+  } catch (error) {
+    message.error("导出失败", error);
+  }
 }
 
 const columns = [
   {
-    title: '用户',
-    key: 'owner_name',
-    width: 'auto',
-    align: 'center',
-    ellipsis: { tooltip: true },
+    title: "用户",
+    key: "owner_name",
+    width: "auto",
+    align: "center",
+    ellipsis: { tooltip: true }
   },
   {
-    title: '账单状态',
-    key: 'status',
-    width: 'auto',
-    align: 'center',
+    title: "账单状态",
+    key: "status",
+    width: "auto",
+    align: "center",
     ellipsis: { tooltip: true },
     render(row) {
       // paid 是已付款，unpaid是未付款，refunded是已退款
@@ -54,51 +77,52 @@ const columns = [
     }
   },
   {
-    title: '总金额',
-    key: 'total_amount',
-    width: 'auto',
-    align: 'center',
-    ellipsis: { tooltip: true },
+    title: "总金额",
+    key: "total_amount",
+    width: "auto",
+    align: "center",
+    ellipsis: { tooltip: true }
   },
   {
-    title: '已结金额',
-    key: 'paid_amount',
-    width: 'auto',
-    align: 'center',
-    ellipsis: { tooltip: true },
+    title: "已结金额",
+    key: "paid_amount",
+    width: "auto",
+    align: "center",
+    ellipsis: { tooltip: true }
   },
   {
-    title: '创建时间',
-    key: 'created_at',
-    width: 'auto',
-    align: 'center',
-    ellipsis: { tooltip: true },
-    render(row) {
-      return formatDate(row.updated_at)
-    },
-  },
-  {
-    title: '更新时间',
-    key: 'updated_at',
-    width: 'auto',
-    align: 'center',
+    title: "创建时间",
+    key: "created_at",
+    width: "auto",
+    align: "center",
     ellipsis: { tooltip: true },
     render(row) {
-      return formatDate(row.updated_at)
-    },
+      return formatDate(row.updated_at);
+    }
   },
   {
-    title: '备注',
-    key: 'remark',
-    width: 'auto',
-    align: 'center',
+    title: "更新时间",
+    key: "updated_at",
+    width: "auto",
+    align: "center",
     ellipsis: { tooltip: true },
+    render(row) {
+      return formatDate(row.updated_at);
+    }
   },
   {
-    title: '操作',
-    key: 'action',
-    width: 'auto',
-    align: 'center',
+    title: "备注",
+    key: "remark",
+    width: "auto",
+    align: "center",
+    ellipsis: { tooltip: true }
+  },
+  {
+    title: "操作",
+    key: "action",
+    width: "auto",
+    align: "center",
+    fixed: "right",
     ellipsis: { tooltip: true },
     render(row) {
       return [
@@ -106,42 +130,65 @@ const columns = [
           h(
             NButton,
             {
-              size: 'small',
-              type: 'primary',
-              style: 'margin-right: 8px;',
-              onClick: () => handleDetail(row),
+              size: "small",
+              type: "primary",
+              style: "margin-right: 8px;",
+              onClick: () => handleDetail(row)
             },
             {
               default: () =>
-                h('div', { style: 'display: flex; align-items: center;' }, [
+                h("div", { style: "display: flex; align-items: center;" }, [
                   h(TheIcon, {
-                    icon: 'material-symbols:info-outline',
+                    icon: "material-symbols:info-outline",
                     size: 16,
-                    style: 'margin-right: 4px;',
+                    style: "margin-right: 4px;"
                   }),
-                  '详情',
-                ]),
+                  "详情"
+                ])
             }
           ),
-          [[vPermission, 'post/api/v1/bill/detail']]
+          [[vPermission, "post/api/v1/bill/detail"]]
         ),
-      ]
-    },
-  },
-]
+        withDirectives(
+          h(
+            NButton,
+            {
+              size: "small",
+              type: "info",
+              style: "margin-right: 8px;",
+              onClick: () => handleExport(row)
+            },
+            {
+              default: () =>
+                h("div", { style: "display: flex; align-items: center;" }, [
+                  h(TheIcon, {
+                    icon: "material-symbols:download",
+                    size: 16,
+                    style: "margin-right: 4px;"
+                  }),
+                  "导出"
+                ])
+            }
+          ),
+          [[vPermission, "post/api/v1/bill/export"]]
+        )
+      ];
+    }
+  }
+];
 const billStatusOptions = [
   {
-    label: '已结账',
-    value: 'paid',
+    label: "已结账",
+    value: "paid"
   },
   {
-    label: '未结账',
-    value: 'unpaid',
-  },
-]
+    label: "未结账",
+    value: "unpaid"
+  }
+];
 onMounted(() => {
-  $table.value?.handleSearch()
-})
+  $table.value?.handleSearch();
+});
 </script>
 <template>
   <!--  业务页面-->
@@ -154,7 +201,12 @@ onMounted(() => {
           type="primary"
           @click="handleAdd"
         >
-          <TheIcon icon="material-symbols:add" :size="18" class="mr-5" />新建账单
+          <TheIcon
+            icon="material-symbols:add"
+            :size="18"
+            class="mr-5"
+          />
+          新建账单
         </NButton>
       </div>
     </template>
@@ -192,7 +244,10 @@ onMounted(() => {
     <!-- 新建账单抽屉 -->
     <NDrawer v-model:show="showAddModal" placement="right" :width="1200">
       <NDrawerContent title="新建账单" closable>
-        <AddBill @success="$table?.handleSearch()" @close="showAddModal = false" />
+        <AddBill
+          @success="$table?.handleSearch()"
+          @close="showAddModal = false"
+        />
       </NDrawerContent>
     </NDrawer>
 
@@ -202,7 +257,10 @@ onMounted(() => {
         <DetailBill
           :bill-id="currentBillId"
           @success="$table?.handleSearch()"
-          @close="showDetailModal = false; $table.value?.handleSearch()"
+          @close="
+            showDetailModal = false;
+            $table.value?.handleSearch();
+          "
         />
       </NDrawerContent>
     </NDrawer>

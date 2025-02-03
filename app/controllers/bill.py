@@ -185,6 +185,7 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
         bill_obj = await self.get_bill_detail(bill_id)
         owner = await User.get(id=bill_obj['owner_id'])
         dept = await Dept.get(id=owner.dept_id)
+        time = export_time.strftime("%Y-%m-%d %H:%M:%S")
         # 构建导出信息
         export_info = {
             'owner_name': owner.username,
@@ -200,10 +201,10 @@ class BillController(CRUDBase[Bill, BillCreate, BillUpdate]):
             'remark': bill_obj['remark'],
             'export_time': export_time
         }
-        file_name = f"{bill_id}_{owner.username}_{export_time}.pdf"
-        generate_pdf(export_info, file_name)
+        file_name = f"bill_pdf/账单_{owner.username}_{time}.pdf"
+        url = generate_pdf(export_info, file_name)
 
-        return file_name
+        return url
 
 
 bill_controller = BillController()
