@@ -31,7 +31,7 @@ class Settings(BaseSettings):
                     "host": "rm-2ze7td37h05fd80qnpo.mysql.rds.aliyuncs.com",  # Database host address
                     "port": 3306,  # Database port
                     "user": "root",  # Database username
-                    "password": "Zrqznb020528!",  # Database password
+                    "password": "!",  # Database password
                     "database": "db_individual_account",  # Database name
                 },
             }
